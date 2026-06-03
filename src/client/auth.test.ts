@@ -24,7 +24,7 @@ describe("authenticator", () => {
     expect(await auth.getToken()).toBe("SESSION_TOKEN"); // cached
     expect(f).toHaveBeenCalledTimes(1);
 
-    const [url, init] = f.mock.calls[0];
+    const [url, init] = f.mock.calls[0]!;
     expect(url).toBe("https://ga.example.com/api/v2/identity/providers/basic?noRedirect=1");
     expect(init.method).toBe("POST");
     expect(init.headers.Referer).toBe("https://ga.example.com");

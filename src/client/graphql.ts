@@ -69,10 +69,29 @@ export function createClient(config: GoAlertConfig, auth: Authenticator, fetchFn
     return serialize(() => executeImpl<T>(query, variables));
   }
 
+  async function paginate<TNode>(
+    query: string,
+    variables: Record<string, unknown>,
+    extract: (data: any) => Connection<TNode>,
+    max = 200,
+  ): Promise<Page<TNode>> {
+    const items: TNode[] = [];
+    let after: string | null = (variables.after as string | undefined) ?? null;
+    let lastCursor: string | null = after;
+    let hasNextPage = true;
+    while (hasNextPage && items.length < max) {
+      const data = await execute<any>(query, { ...variables, after });
+      const conn = extract(data);
+      items.push(...conn.nodes);
+      lastCursor = conn.pageInfo.endCursor || lastCursor;
+      after = conn.pageInfo.endCursor;
+      hasNextPage = conn.pageInfo.hasNextPage;
+    }
+    return { items: items.slice(0, max), nextCursor: lastCursor, hasMore: hasNextPage || items.length > max };
+  }
+
   return {
     execute,
-    async paginate<TNode>() {
-      throw new GoAlertError("paginate not implemented"); // replaced in Task 6
-    },
+    paginate,
   };
 }

@@ -23,7 +23,7 @@ describe("graphql executor", () => {
     const client = createClient(cfg, fakeAuth(), f as any);
     const data = await client.execute<{ service: { id: string } }>("query{service{id}}", { id: "1" });
     expect(data.service.id).toBe("1");
-    const [url, init] = f.mock.calls[0];
+    const [url, init] = (f.mock.calls as any[])[0];
     expect(url).toBe("https://ga.example.com/api/graphql");
     expect((init as any).headers.Authorization).toBe("Bearer TOK");
     expect(JSON.parse((init as any).body)).toEqual({ query: "query{service{id}}", variables: { id: "1" } });
@@ -63,5 +63,30 @@ describe("graphql executor", () => {
     const client = createClient(cfg, fakeAuth(), f as any);
     await Promise.all([client.execute("q"), client.execute("q"), client.execute("q")]);
     expect(maxInFlight).toBe(1);
+  });
+
+  test("paginate follows cursors until hasNextPage is false", async () => {
+    const pages = [
+      { data: { services: { nodes: [{ id: "1" }], pageInfo: { endCursor: "c1", hasNextPage: true } } } },
+      { data: { services: { nodes: [{ id: "2" }], pageInfo: { endCursor: "c2", hasNextPage: false } } } },
+    ];
+    let i = 0;
+    const f = vi.fn(async () => jsonRes(pages[i++]));
+    const client = createClient(cfg, fakeAuth(), f as any);
+    const page = await client.paginate<{ id: string }>(
+      "query($after:String){services(input:{after:$after}){nodes{id} pageInfo{endCursor hasNextPage}}}",
+      {}, (d) => d.services,
+    );
+    expect(page.items.map((s) => s.id)).toEqual(["1", "2"]);
+    expect(page.hasMore).toBe(false);
+    expect(page.nextCursor).toBe("c2");
+  });
+
+  test("paginate stops at max and reports hasMore", async () => {
+    const f = vi.fn(async () => jsonRes({ data: { services: { nodes: [{ id: "x" }], pageInfo: { endCursor: "c", hasNextPage: true } } } }));
+    const client = createClient(cfg, fakeAuth(), f as any);
+    const page = await client.paginate<{ id: string }>("q", {}, (d) => d.services, 2);
+    expect(page.items).toHaveLength(2);
+    expect(page.hasMore).toBe(true);
   });
 });
