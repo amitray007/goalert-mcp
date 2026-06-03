@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/amitray007/goalert-mcp/compare/v0.1.0...v0.1.1) (2026-06-03)
+
+
+### Documentation
+
+* lead README with the goalert-mcp name for search/snippet ([78b0730](https://github.com/amitray007/goalert-mcp/commit/78b073001e518568722b35a1de01f592364d93f9))
+
 ## 0.1.0 (2026-06-03)
 
 
