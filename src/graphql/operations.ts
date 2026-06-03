@@ -33,6 +33,29 @@ export const ESCALATE_ALERTS = /* GraphQL */ `mutation Escalate($ids: [Int!]) { 
 export const CLOSE_BY_SERVICE = /* GraphQL */ `
 mutation CloseByService($input: UpdateAlertsByServiceInput!) { updateAlertsByService(input: $input) }`;
 
+export const LIST_SERVICES = /* GraphQL */ `
+query ListServices($input: ServiceSearchOptions) {
+  services(input: $input) {
+    nodes { id name description escalationPolicyID isFavorite }
+    pageInfo { endCursor hasNextPage }
+  }
+}`;
+export const GET_SERVICE = /* GraphQL */ `
+query GetService($id: ID!) {
+  service(id: $id) {
+    id name description isFavorite maintenanceExpiresAt
+    escalationPolicy { id name }
+    onCallUsers { userID userName stepNumber }
+    labels { key value }
+    integrationKeys { id name type href }
+    heartbeatMonitors { id name timeoutMinutes lastState href }
+  }
+}`;
+export const CREATE_SERVICE = /* GraphQL */ `
+mutation CreateService($input: CreateServiceInput!) { createService(input: $input) { id name } }`;
+export const UPDATE_SERVICE = /* GraphQL */ `
+mutation UpdateService($input: UpdateServiceInput!) { updateService(input: $input) }`;
+
 export const ONCALL_BY_SERVICE = /* GraphQL */ `
 query OnCallByService($id: ID!) {
   service(id: $id) { id name onCallUsers { userID userName stepNumber } }

@@ -8,9 +8,10 @@ import type { ToolDef } from "./tools/types.js";
 import { commonTools } from "./tools/common.js";
 import { alertTools } from "./tools/alerts.js";
 import { onCallTools } from "./tools/oncall.js";
+import { serviceTools } from "./tools/services.js";
 
 export function allToolDefs(): ToolDef[] {
-  return [...commonTools, ...alertTools, ...onCallTools];
+  return [...commonTools, ...alertTools, ...onCallTools, ...serviceTools];
 }
 
 export async function main(): Promise<void> {
