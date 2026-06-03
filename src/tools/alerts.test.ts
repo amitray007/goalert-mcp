@@ -64,3 +64,16 @@ test("manage_alerts requires alertIDs or serviceID", async () => {
   await expect(tool("manage_alerts").handler({ execute: vi.fn(), paginate: vi.fn() } as any, { action: "ack" }))
     .rejects.toThrow(/alertIDs or serviceID/i);
 });
+test("manage_alerts escalate with no target throws alertIDs or serviceID", async () => {
+  await expect(tool("manage_alerts").handler({ execute: vi.fn(), paginate: vi.fn() } as any, { action: "escalate" }))
+    .rejects.toThrow(/alertIDs or serviceID/i);
+});
+test("manage_alerts escalate with only serviceID throws escalate requires alertIDs", async () => {
+  await expect(tool("manage_alerts").handler({ execute: vi.fn(), paginate: vi.fn() } as any, { action: "escalate", serviceID: "s1" }))
+    .rejects.toThrow(/escalate requires alertIDs/i);
+});
+test("create_alert omits optional fields when only serviceID and summary given", async () => {
+  const execute = vi.fn(async (..._args: any[]) => ({ createAlert: { alertID: 9 } }));
+  await tool("create_alert").handler({ execute, paginate: vi.fn() } as any, { serviceID: "s1", summary: "Disk full" });
+  expect(execute.mock.calls[0]![1]).toEqual({ input: { serviceID: "s1", summary: "Disk full" } });
+});

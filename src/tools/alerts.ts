@@ -74,7 +74,7 @@ const createAlert: ToolDef = {
 const manageAlerts: ToolDef = {
   name: "manage_alerts",
   description:
-    "Acknowledge, close, unacknowledge, or escalate alerts. Target either specific alertIDs (numeric) or all alerts on a serviceID (close/ack only, not escalate).",
+    "Acknowledge, close, unacknowledge, or escalate alerts. Target either specific alertIDs (numeric) OR all alerts on a serviceID. Escalate requires alertIDs (not valid with serviceID). If both alertIDs and serviceID are provided, alertIDs takes precedence.",
   inputSchema: {
     action: z.enum(["ack", "close", "unack", "escalate"]),
     alertIDs: z.array(z.number().int()).optional(),

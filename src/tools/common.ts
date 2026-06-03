@@ -50,12 +50,14 @@ const graphqlQuery: ToolDef = {
   },
 };
 
-const TARGET_TYPES = ["service","schedule","rotation","escalationPolicy","escalationPolicyStep","integrationKey","heartbeatMonitor","userOverride","user","contactMethod","notificationRule","calendarSubscription","userSession","rotationParticipant"] as const;
+// Operator-scoped subset of GoAlert's TargetType enum (verified via live
+// introspection). No user-account targets; no non-existent enum values.
+const TARGET_TYPES = ["service", "schedule", "rotation", "escalationPolicy", "integrationKey", "heartbeatMonitor", "userOverride", "calendarSubscription"] as const;
 
 const deleteResource: ToolDef = {
   name: "goalert_delete",
   description:
-    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies (and steps), integration keys, heartbeat monitors, user overrides, etc. Requires confirm:true.",
+    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies, integration keys, heartbeat monitors, user overrides, and calendar subscriptions. (Escalation-policy STEPS are not deletable here — they're removed via update_escalation_policy stepIDs, coming in a later phase.) Requires confirm:true.",
   inputSchema: {
     type: z.enum(TARGET_TYPES).describe("The resource type to delete."),
     ids: z.array(z.string()).min(1).describe("IDs of resources of that type."),
