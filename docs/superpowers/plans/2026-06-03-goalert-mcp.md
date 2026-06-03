@@ -1326,7 +1326,7 @@ Operation:
 export const DELETE_ALL = /* GraphQL */ `mutation DeleteAll($input: [TargetInput!]) { deleteAll(input: $input) }`;
 ```
 
-Valid `type` values (GoAlert `TargetType`): `service`, `schedule`, `rotation`, `escalationPolicy`, `escalationPolicyStep`, `integrationKey`, `heartbeatMonitor`, `userOverride`, `user`, `contactMethod`, `notificationRule`, `calendarSubscription`, `userSession`, `rotationParticipant`.
+Valid `type` values — a **safe, operator-scoped subset** of GoAlert's `TargetType` enum: `service`, `schedule`, `rotation`, `escalationPolicy`, `integrationKey`, `heartbeatMonitor`, `userOverride`, `calendarSubscription`. User-account targets (`user`, `contactMethod`, `notificationRule`, `userSession`) are intentionally **excluded** per the operator-focused scope (no user-account writes). Note: GoAlert has **no** `escalationPolicyStep` or `rotationParticipant` `TargetType` (verified via live introspection) — EP steps are removed via `update_escalation_policy.stepIDs`, not `deleteAll`.
 
 - [ ] **Step 1: Add failing tests** (append to `common.test.ts`)
 
@@ -1355,12 +1355,16 @@ test("goalert_delete is destructive+mutating", () => {
 - [ ] **Step 3: Implement** — append to `commonTools` in `src/tools/common.ts`:
 
 ```ts
-const TARGET_TYPES = ["service","schedule","rotation","escalationPolicy","escalationPolicyStep","integrationKey","heartbeatMonitor","userOverride","user","contactMethod","notificationRule","calendarSubscription","userSession","rotationParticipant"] as const;
+// Operator-scoped subset of GoAlert's TargetType enum (verified via live
+// introspection). Excludes user-account targets (user/contactMethod/
+// notificationRule/userSession) per scope, and excludes values that aren't in
+// the enum at all (there is no escalationPolicyStep/rotationParticipant).
+const TARGET_TYPES = ["service","schedule","rotation","escalationPolicy","integrationKey","heartbeatMonitor","userOverride","calendarSubscription"] as const;
 
 const deleteResource: ToolDef = {
   name: "goalert_delete",
   description:
-    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies (and steps), integration keys, heartbeat monitors, user overrides, etc. Requires confirm:true.",
+    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies, integration keys, heartbeat monitors, user overrides, and calendar subscriptions. (Escalation-policy STEPS are not deletable here — remove them via update_escalation_policy stepIDs.) Requires confirm:true.",
   inputSchema: {
     type: z.enum(TARGET_TYPES).describe("The resource type to delete."),
     ids: z.array(z.string()).min(1).describe("IDs of resources of that type."),
@@ -1798,7 +1802,7 @@ Operations:
 export const CREATE_EP_STEP = /* GraphQL */ `mutation CreateEPStep($input: CreateEscalationPolicyStepInput!) { createEscalationPolicyStep(input: $input) { id stepNumber } }`;
 export const UPDATE_EP_STEP = /* GraphQL */ `mutation UpdateEPStep($input: UpdateEscalationPolicyStepInput!) { updateEscalationPolicyStep(input: $input) }`;
 ```
-`CreateEscalationPolicyStepInput { escalationPolicyID: ID!, delayMinutes: Int!, actions: [DestinationInput!] }`. `UpdateEscalationPolicyStepInput { id: ID!, delayMinutes: Int, actions: [DestinationInput!] }`. `DestinationInput { type: DestinationType!, args: StringMap! }` (e.g. `type: "builtin-rotation", args: { rotation_id: "..." }`; schedule: `type: "builtin-schedule", args: { schedule_id }`; user: `type: "builtin-user", args: { user_id }`). Delete a step via `goalert_delete` with `type: "escalationPolicyStep"`.
+`CreateEscalationPolicyStepInput { escalationPolicyID: ID!, delayMinutes: Int!, actions: [DestinationInput!] }`. `UpdateEscalationPolicyStepInput { id: ID!, delayMinutes: Int, actions: [DestinationInput!] }`. `DestinationInput { type: DestinationType!, args: StringMap! }` (e.g. `type: "builtin-rotation", args: { rotation_id: "..." }`; schedule: `type: "builtin-schedule", args: { schedule_id }`; user: `type: "builtin-user", args: { user_id }`). To **remove** a step, use `update_escalation_policy` with `stepIDs` set to the full ordered list of step IDs to keep (omit the one being removed) — GoAlert has no step-delete mutation and `escalationPolicyStep` is not a `deleteAll`/`TargetType` value.
 
 - [ ] **Step 1: Tests** — `action:"add"` calls CREATE_EP_STEP with `{input:{escalationPolicyID, delayMinutes, actions}}`; `action:"update"` calls UPDATE_EP_STEP with `{input:{id, ...}}`. Actions map `{userIDs?, scheduleIDs?, rotationIDs?}` → DestinationInput[]. **Step 2: FAIL. Step 3: Implement**:
 
@@ -1814,7 +1818,7 @@ function toDestinations(a: { userIDs?: string[]; scheduleIDs?: string[]; rotatio
 const manageEPSteps: ToolDef = {
   name: "manage_escalation_policy_steps",
   description:
-    "Add or update an escalation policy step. A step notifies its targets (users/schedules/rotations) then waits delayMinutes before the next step. To remove a step, use goalert_delete with type 'escalationPolicyStep'. To reorder, use update_escalation_policy stepIDs.",
+    "Add or update an escalation policy step. A step notifies its targets (users/schedules/rotations) then waits delayMinutes before the next step. To remove or reorder steps, use update_escalation_policy with stepIDs (the full ordered list of remaining step IDs).",
   inputSchema: {
     action: z.enum(["add", "update"]),
     escalationPolicyID: z.string().optional().describe("Required for action 'add'."),
