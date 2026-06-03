@@ -12,6 +12,7 @@ import { serviceTools } from "./tools/services.js";
 import { escalationTools } from "./tools/escalation.js";
 import { scheduleTools } from "./tools/schedules.js";
 import { rotationTools } from "./tools/rotations.js";
+import { userTools } from "./tools/users.js";
 
 export function allToolDefs(): ToolDef[] {
   return [
@@ -22,6 +23,7 @@ export function allToolDefs(): ToolDef[] {
     ...escalationTools,
     ...scheduleTools,
     ...rotationTools,
+    ...userTools,
   ];
 }
 
