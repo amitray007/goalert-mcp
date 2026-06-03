@@ -1,6 +1,6 @@
 # goalert-mcp
 
-An MCP (Model Context Protocol) server that gives an LLM read and write control over a [GoAlert](https://github.com/target/goalert) on-call management instance. It communicates with GoAlert over its GraphQL API, supports authentication via username/password (with automatic session refresh) or a pre-obtained session token, exposes 37 curated operator tools across alerts, services, schedules, rotations, escalation policies, and more, and includes a built-in read-only mode that hides all mutating tools.
+An MCP (Model Context Protocol) server that gives an LLM read and write control over a [GoAlert](https://github.com/target/goalert) on-call management instance. It communicates with GoAlert over its GraphQL API, supports authentication via username/password (with automatic session refresh) or a pre-obtained session token, exposes 33 curated operator tools across alerts, services, schedules, rotations, escalation policies, and more, and includes a built-in read-only mode that hides all mutating tools.
 
 ---
 
@@ -188,7 +188,7 @@ Tools marked **(read-only)** never modify GoAlert state. Tools marked **(mutatin
 
 ## Read-only mode
 
-Set `GOALERT_READ_ONLY=true` to hide all mutating tools. Only the 13 read-only tools will be registered with the MCP client. This is useful for giving an LLM read access without write risk.
+Set `GOALERT_READ_ONLY=true` to hide all mutating tools. Only the 14 read-only tools will be registered with the MCP client. This is useful for giving an LLM read access without write risk.
 
 ---
 
