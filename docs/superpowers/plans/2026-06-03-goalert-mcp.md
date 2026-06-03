@@ -771,9 +771,15 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Page } from "./client/graphql.js";
 
 export function ok(summary: string, data: unknown): CallToolResult {
+  // MCP requires structuredContent to be a JSON object. Wrap arrays/primitives
+  // (e.g. updateAlerts -> [Alert!]) as { result } so the result stays valid.
+  const structuredContent =
+    data !== null && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : { result: data };
   return {
     content: [{ type: "text", text: `${summary}\n\n${JSON.stringify(data, null, 2)}` }],
-    structuredContent: data as Record<string, unknown>,
+    structuredContent,
   };
 }
 
@@ -1097,11 +1103,13 @@ query ListAlerts($input: AlertSearchOptions) {
 export const GET_ALERT = /* GraphQL */ `
 query GetAlert($id: Int!) {
   alert(id: $id) {
-    id alertID status summary details dedup createdAt
-    service { id name }
+    id alertID status summary details createdAt
+    serviceID service { id name }
+    noiseReason
+    meta { key value }
     state { lastEscalation stepNumber repeatCount }
     recentEvents(input: { limit: 20 }) {
-      nodes { timestamp message state { details status } }
+      nodes { id timestamp message state { details status } }
     }
   }
 }`;
@@ -1436,7 +1444,7 @@ const setFavorite: ToolDef = {
 
 const setLabel: ToolDef = {
   name: "goalert_set_label",
-  description: "Set or remove a key/value label on a target (usually a service). An empty value deletes the label.",
+  description: "Set or remove a key/value label on a target (usually a service). The key MUST be namespaced as `prefix/suffix` (e.g. `team/owner`) — GoAlert rejects un-namespaced keys. An empty value deletes the label.",
   inputSchema: {
     type: z.enum(["service"]).describe("Currently only service labels are supported."),
     id: z.string(),
