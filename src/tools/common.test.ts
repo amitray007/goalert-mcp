@@ -83,7 +83,7 @@ test("goalert_delete requires confirm:true", async () => {
     .rejects.toThrow(/confirm/i);
 });
 test("goalert_delete sends TargetInput pairs", async () => {
-  const execute = vi.fn(async () => ({ deleteAll: true }));
+  const execute = vi.fn(async (..._args: any[]) => ({ deleteAll: true }));
   await tool("goalert_delete").handler({ execute } as any, { type: "service", ids: ["1", "2"], confirm: true });
   expect(execute.mock.calls[0]![1]).toEqual({ input: [{ type: "service", id: "1" }, { type: "service", id: "2" }] });
 });
@@ -93,12 +93,12 @@ test("goalert_delete is destructive+mutating", () => {
 });
 
 test("set_favorite builds input", async () => {
-  const execute = vi.fn(async () => ({ setFavorite: true }));
+  const execute = vi.fn(async (..._args: any[]) => ({ setFavorite: true }));
   await tool("goalert_set_favorite").handler({ execute } as any, { type: "service", id: "1", favorite: true });
   expect(execute.mock.calls[0]![1]).toEqual({ input: { target: { type: "service", id: "1" }, favorite: true } });
 });
 test("set_label builds input (empty value = delete)", async () => {
-  const execute = vi.fn(async () => ({ setLabel: true }));
+  const execute = vi.fn(async (..._args: any[]) => ({ setLabel: true }));
   await tool("goalert_set_label").handler({ execute } as any, { type: "service", id: "1", key: "team", value: "" });
   expect(execute.mock.calls[0]![1]).toEqual({ input: { target: { type: "service", id: "1" }, key: "team", value: "" } });
 });
