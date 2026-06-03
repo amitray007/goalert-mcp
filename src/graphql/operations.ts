@@ -25,6 +25,14 @@ export const DELETE_ALL = /* GraphQL */ `mutation DeleteAll($input: [TargetInput
 export const SET_FAVORITE = /* GraphQL */ `mutation SetFavorite($input: SetFavoriteInput!) { setFavorite(input: $input) }`;
 export const SET_LABEL = /* GraphQL */ `mutation SetLabel($input: SetLabelInput!) { setLabel(input: $input) }`;
 
+export const CREATE_ALERT = /* GraphQL */ `
+mutation CreateAlert($input: CreateAlertInput!) { createAlert(input: $input) { id alertID status summary } }`;
+export const UPDATE_ALERTS = /* GraphQL */ `
+mutation UpdateAlerts($input: UpdateAlertsInput!) { updateAlerts(input: $input) { id alertID status } }`;
+export const ESCALATE_ALERTS = /* GraphQL */ `mutation Escalate($ids: [Int!]) { escalateAlerts(input: $ids) { id alertID status } }`;
+export const CLOSE_BY_SERVICE = /* GraphQL */ `
+mutation CloseByService($input: UpdateAlertsByServiceInput!) { updateAlertsByService(input: $input) }`;
+
 export const ONCALL_BY_SERVICE = /* GraphQL */ `
 query OnCallByService($id: ID!) {
   service(id: $id) { id name onCallUsers { userID userName stepNumber } }

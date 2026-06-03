@@ -38,3 +38,29 @@ describe("get_alert", () => {
     expect(r.structuredContent).toMatchObject({ alertID: 7 });
   });
 });
+
+test("create_alert builds input incl meta", async () => {
+  const execute = vi.fn(async (..._args: any[]) => ({ createAlert: { alertID: 9 } }));
+  const r = await tool("create_alert").handler({ execute, paginate: vi.fn() } as any,
+    { serviceID: "s1", summary: "Disk full", details: "x", dedup: "d", meta: { host: "db1" } });
+  expect(execute.mock.calls[0]![1]).toMatchObject({ input: { serviceID: "s1", summary: "Disk full", meta: [{ key: "host", value: "db1" }] } });
+});
+test("manage_alerts ack by ids", async () => {
+  const execute = vi.fn(async (..._args: any[]) => ({ updateAlerts: [] }));
+  await tool("manage_alerts").handler({ execute, paginate: vi.fn() } as any, { action: "ack", alertIDs: [1, 2] });
+  expect(execute.mock.calls[0]![1]).toEqual({ input: { alertIDs: [1, 2], newStatus: "StatusAcknowledged" } });
+});
+test("manage_alerts escalate uses escalateAlerts", async () => {
+  const execute = vi.fn(async (..._args: any[]) => ({ escalateAlerts: [] }));
+  await tool("manage_alerts").handler({ execute, paginate: vi.fn() } as any, { action: "escalate", alertIDs: [3] });
+  expect(execute.mock.calls[0]![1]).toEqual({ ids: [3] });
+});
+test("manage_alerts close-all-for-service", async () => {
+  const execute = vi.fn(async (..._args: any[]) => ({ updateAlertsByService: true }));
+  await tool("manage_alerts").handler({ execute, paginate: vi.fn() } as any, { action: "close", serviceID: "s1" });
+  expect(execute.mock.calls[0]![1]).toEqual({ input: { serviceID: "s1", newStatus: "StatusClosed" } });
+});
+test("manage_alerts requires alertIDs or serviceID", async () => {
+  await expect(tool("manage_alerts").handler({ execute: vi.fn(), paginate: vi.fn() } as any, { action: "ack" }))
+    .rejects.toThrow(/alertIDs or serviceID/i);
+});
