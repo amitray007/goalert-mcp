@@ -3,6 +3,7 @@ import { parse, Kind, type OperationDefinitionNode } from "graphql";
 import type { ToolDef } from "./types.js";
 import { ok } from "../format.js";
 import { GoAlertError } from "../client/errors.js";
+import { DELETE_ALL, SET_FAVORITE, SET_LABEL } from "../graphql/operations.js";
 
 function assertReadOnly(query: string): void {
   // Parse the document properly: a regex can't distinguish a real `mutation`
@@ -49,4 +50,58 @@ const graphqlQuery: ToolDef = {
   },
 };
 
-export const commonTools: ToolDef[] = [graphqlQuery];
+const TARGET_TYPES = ["service","schedule","rotation","escalationPolicy","escalationPolicyStep","integrationKey","heartbeatMonitor","userOverride","user","contactMethod","notificationRule","calendarSubscription","userSession","rotationParticipant"] as const;
+
+const deleteResource: ToolDef = {
+  name: "goalert_delete",
+  description:
+    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies (and steps), integration keys, heartbeat monitors, user overrides, etc. Requires confirm:true.",
+  inputSchema: {
+    type: z.enum(TARGET_TYPES).describe("The resource type to delete."),
+    ids: z.array(z.string()).min(1).describe("IDs of resources of that type."),
+    confirm: z.literal(true).describe("Must be true to actually delete."),
+  },
+  mutating: true,
+  destructive: true,
+  handler: async (client, args) => {
+    if (args.confirm !== true) throw new GoAlertError("Refusing to delete without confirm:true");
+    const input = args.ids.map((id: string) => ({ type: args.type, id }));
+    await client.execute(DELETE_ALL, { input });
+    return ok(`Deleted ${args.ids.length} ${args.type}(s)`, { type: args.type, ids: args.ids });
+  },
+};
+
+const FAVORITABLE = ["service", "schedule", "rotation", "user"] as const;
+
+const setFavorite: ToolDef = {
+  name: "goalert_set_favorite",
+  description: "Mark a service, schedule, rotation, or user as favorite (or unfavorite).",
+  inputSchema: {
+    type: z.enum(FAVORITABLE),
+    id: z.string(),
+    favorite: z.boolean(),
+  },
+  mutating: true,
+  handler: async (client, args) => {
+    await client.execute(SET_FAVORITE, { input: { target: { type: args.type, id: args.id }, favorite: args.favorite } });
+    return ok(`${args.favorite ? "Favorited" : "Unfavorited"} ${args.type} ${args.id}`, { type: args.type, id: args.id, favorite: args.favorite });
+  },
+};
+
+const setLabel: ToolDef = {
+  name: "goalert_set_label",
+  description: "Set or remove a key/value label on a target (usually a service). An empty value deletes the label.",
+  inputSchema: {
+    type: z.enum(["service"]).describe("Currently only service labels are supported."),
+    id: z.string(),
+    key: z.string(),
+    value: z.string().describe("Label value; empty string deletes the label."),
+  },
+  mutating: true,
+  handler: async (client, args) => {
+    await client.execute(SET_LABEL, { input: { target: { type: args.type, id: args.id }, key: args.key, value: args.value } });
+    return ok(`Set label ${args.key} on ${args.type} ${args.id}`, { key: args.key, value: args.value });
+  },
+};
+
+export const commonTools: ToolDef[] = [graphqlQuery, deleteResource, setFavorite, setLabel];

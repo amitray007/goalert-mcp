@@ -21,6 +21,10 @@ query GetAlert($id: Int!) {
   }
 }`;
 
+export const DELETE_ALL = /* GraphQL */ `mutation DeleteAll($input: [TargetInput!]) { deleteAll(input: $input) }`;
+export const SET_FAVORITE = /* GraphQL */ `mutation SetFavorite($input: SetFavoriteInput!) { setFavorite(input: $input) }`;
+export const SET_LABEL = /* GraphQL */ `mutation SetLabel($input: SetLabelInput!) { setLabel(input: $input) }`;
+
 export const ONCALL_BY_SERVICE = /* GraphQL */ `
 query OnCallByService($id: ID!) {
   service(id: $id) { id name onCallUsers { userID userName stepNumber } }
