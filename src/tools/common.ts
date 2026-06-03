@@ -57,7 +57,7 @@ const TARGET_TYPES = ["service", "schedule", "rotation", "escalationPolicy", "in
 const deleteResource: ToolDef = {
   name: "goalert_delete",
   description:
-    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies, integration keys, heartbeat monitors, user overrides, and calendar subscriptions. (Escalation-policy STEPS are not deletable here — they're removed via update_escalation_policy stepIDs, coming in a later phase.) Requires confirm:true.",
+    "Delete one or more GoAlert resources of a single type by ID (uses deleteAll). Covers services, schedules, rotations, escalation policies, integration keys, heartbeat monitors, user overrides, and calendar subscriptions. (Escalation-policy STEPS are not deletable here — remove them via update_escalation_policy stepIDs.) Requires confirm:true.",
   inputSchema: {
     type: z.enum(TARGET_TYPES).describe("The resource type to delete."),
     ids: z.array(z.string()).min(1).describe("IDs of resources of that type."),
