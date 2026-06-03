@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](.nvmrc)
 
-An MCP (Model Context Protocol) server that gives an LLM read and write control over a [GoAlert](https://github.com/target/goalert) on-call management instance. It communicates with GoAlert over its GraphQL API, supports authentication via username/password (with automatic session refresh) or a pre-obtained session token, exposes 33 curated operator tools across alerts, services, schedules, rotations, escalation policies, and more, and includes a built-in read-only mode that hides all mutating tools.
+`goalert-mcp` is an MCP (Model Context Protocol) server that gives an LLM read and write control over a [GoAlert](https://github.com/target/goalert) on-call management instance. It communicates with GoAlert over its GraphQL API, supports authentication via username/password (with automatic session refresh) or a pre-obtained session token, exposes 33 curated operator tools across alerts, services, schedules, rotations, escalation policies, and more, and includes a built-in read-only mode that hides all mutating tools.
 
 ---
 
