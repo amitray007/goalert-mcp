@@ -1,0 +1,43 @@
+name: Release (npm publish)
+
+# Publishes to npm when you push a version tag (e.g. v0.1.0).
+#
+# Setup (one time):
+#   1. Create an npm "Automation" access token (npmjs.com → Access Tokens), or a
+#      granular token with publish rights to this package.
+#   2. Add it to the repo as a secret named NPM_TOKEN
+#      (Settings → Secrets and variables → Actions → New repository secret).
+#
+# Release:
+#   npm version patch        # bumps package.json + creates the git tag
+#   git push --follow-tags   # pushing the v* tag triggers this workflow
+#
+# (For the very first 0.1.0, package.json is already at 0.1.0 — just tag it:
+#   git tag v0.1.0 && git push origin v0.1.0)
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+      - run: npm ci
+      # `npm publish` runs prepublishOnly (typecheck + test) then prepack (build)
+      # automatically, so a broken build/test aborts the publish.
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # When this repo is public, you can add build provenance: append
+      # `--provenance` to the publish command above and add `id-token: write`
+      # to the `permissions:` block.
