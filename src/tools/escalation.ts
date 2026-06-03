@@ -40,11 +40,12 @@ const getEP: ToolDef = {
 
 const createEP: ToolDef = {
   name: "create_escalation_policy",
-  description: "Create an escalation policy. repeat = number of times the policy loops (0 = once).",
+  description:
+    "Create an escalation policy. repeat = number of times the policy loops after the last step (defaults to 3 if omitted; 0 = run once).",
   inputSchema: {
     name: z.string(),
     description: z.string().optional(),
-    repeat: z.number().int().min(0).max(5).optional(),
+    repeat: z.number().int().min(0).max(5).optional().describe("Defaults to 3 if omitted."),
     favorite: z.boolean().optional(),
   },
   mutating: true,

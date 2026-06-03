@@ -172,6 +172,18 @@ describe("manage_escalation_policy_steps", () => {
     expect(callArgs.input.actions).toEqual([{ type: "builtin-rotation", args: { rotation_id: "r2" } }]);
   });
 
+  test("update without targets leaves actions untouched (does not clobber)", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ updateEscalationPolicyStep: true }));
+    await tool("manage_escalation_policy_steps").handler({ execute, paginate: vi.fn() } as any, {
+      action: "update",
+      stepID: "ep-step-1",
+      delayMinutes: 10,
+    });
+    const input = execute.mock.calls[0]![1].input;
+    expect(input).toEqual({ id: "ep-step-1", delayMinutes: 10 });
+    expect(input).not.toHaveProperty("actions");
+  });
+
   test("update without stepID throws", async () => {
     await expect(
       tool("manage_escalation_policy_steps").handler({ execute: vi.fn(), paginate: vi.fn() } as any, { action: "update" }),
