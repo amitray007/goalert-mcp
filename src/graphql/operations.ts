@@ -56,6 +56,26 @@ mutation CreateService($input: CreateServiceInput!) { createService(input: $inpu
 export const UPDATE_SERVICE = /* GraphQL */ `
 mutation UpdateService($input: UpdateServiceInput!) { updateService(input: $input) }`;
 
+export const LIST_EPS = /* GraphQL */ `
+query ListEPs($input: EscalationPolicySearchOptions) {
+  escalationPolicies(input: $input) {
+    nodes { id name description repeat isFavorite }
+    pageInfo { endCursor hasNextPage }
+  }
+}`;
+export const GET_EP = /* GraphQL */ `
+query GetEP($id: ID!) {
+  escalationPolicy(id: $id) {
+    id name description repeat
+    steps { id stepNumber delayMinutes actions { type args } }
+    assignedTo { id type name }
+  }
+}`;
+export const CREATE_EP = /* GraphQL */ `mutation CreateEP($input: CreateEscalationPolicyInput!) { createEscalationPolicy(input: $input) { id name } }`;
+export const UPDATE_EP = /* GraphQL */ `mutation UpdateEP($input: UpdateEscalationPolicyInput!) { updateEscalationPolicy(input: $input) }`;
+export const CREATE_EP_STEP = /* GraphQL */ `mutation CreateEPStep($input: CreateEscalationPolicyStepInput!) { createEscalationPolicyStep(input: $input) { id stepNumber } }`;
+export const UPDATE_EP_STEP = /* GraphQL */ `mutation UpdateEPStep($input: UpdateEscalationPolicyStepInput!) { updateEscalationPolicyStep(input: $input) }`;
+
 export const ONCALL_BY_SERVICE = /* GraphQL */ `
 query OnCallByService($id: ID!) {
   service(id: $id) { id name onCallUsers { userID userName stepNumber } }
