@@ -1731,7 +1731,7 @@ Operations:
 export const LIST_EPS = /* GraphQL */ `
 query ListEPs($input: EscalationPolicySearchOptions) {
   escalationPolicies(input: $input) {
-    nodes { id name description stepCount }
+    nodes { id name description repeat isFavorite }
     pageInfo { endCursor hasNextPage }
   }
 }`;
@@ -1739,12 +1739,12 @@ export const GET_EP = /* GraphQL */ `
 query GetEP($id: ID!) {
   escalationPolicy(id: $id) {
     id name description repeat
-    steps { id stepNumber delayMinutes actions { type args displayInfo { ... on DestinationDisplayInfo { text } } } }
-    assignedTo { id name }
+    steps { id stepNumber delayMinutes actions { type args } }
+    assignedTo { id type name }
   }
 }`;
 ```
-> Note: `actions` is `[Destination!]`; `Destination.displayInfo` is a union (`DestinationDisplayInfo | DestinationDisplayInfoError`). If the inline-fragment selection causes schema issues, fall back to `actions { type args }`. Verify against the live schema during implementation (run the query via `goalert_graphql_query` once auth works).
+> Note (verified via live introspection): `EscalationPolicy` has fields `id name description repeat isFavorite assignedTo steps notices` (there is **no** `stepCount` — that's why the list selects `repeat isFavorite` instead). `EscalationPolicyStep.actions` is `[Destination!]!`; `Destination` exposes `type` and `args: StringMap!` (its `displayInfo` is a `DestinationDisplayInfo | DestinationDisplayInfoError` union we deliberately skip). `assignedTo` is `[Target!]!` where `Target` is `{ id type name }`. Use exactly the selections shown above.
 
 - [ ] **Step 1: Test** — list passes `{ input:{ first, after, search? } }` (extractor `d.escalationPolicies`); get passes `{ id }`, returns `escalationPolicy`. **Step 2: FAIL. Step 3: Implement** `escalationTools = [listEPs, getEP]` following the services read pattern (swap operations + extractor + names). **Step 4: PASS. Step 5: Commit** — `git commit -am "feat: list/get escalation policy tools"`. Wire into `server.ts`.
 
@@ -2253,4 +2253,4 @@ GOALERT_BASE_URL=https://goalert.example.com GOALERT_TOKEN=<token> node dist/ind
 - **Spec coverage:** every tool in spec §5 maps to a task — common (T10,13,14), alerts (T11,15), on-call (T12), services (T16,17), escalation (T18,19,20), schedules (T21,22,23,24), rotations (T25,26), users (T27), integration keys (T28), heartbeats (T29). Config §6 → T2; auth/serialization/errors §3-4 → T3-6; read-only guard → T8; output/errors/pagination §7 → T6,7,8; testing §8 → unit tests per task + T30; distribution §9 → T1,31. Rotation-override question → T26 (`activeUserIndex`) + T23 doc.
 - **Deviations from spec (intentional):** (1) no GraphQL codegen — hand-written types + operation strings, optional `introspect` script instead (live introspection needs auth; keeps builds hermetic). (2) Schedule rules/targets exposed as a dedicated `set_schedule_target` tool rather than folded into `update_schedule`. Tool count is ~32 incl. these.
 - **Type/name consistency:** `GoAlertClient.execute`/`paginate`, `Page`, `Connection`, `ToolDef`, `ok`/`listResult`, `registerTools` used consistently across all tasks. Each tool module exports `<area>Tools: ToolDef[]`, all aggregated in `server.ts` `allToolDefs()`.
-- **Open verification items (resolve during implementation against live schema via `goalert_graphql_query`):** exact `*SearchOptions` field names; `Destination.displayInfo` union selection in `get_escalation_policy`; `contactMethods.dest { type args }` shape on `get_user`. Each is isolated to one query string and surfaces a clear GraphQL error if a field name is off.
+- **Verification status (checked against the live v0.34.1 schema via introspection):** RESOLVED for Phase 3 — `ServiceSearchOptions`/`EscalationPolicySearchOptions` field names confirmed (`first/after/search/omit[/only]/favoritesOnly/favoritesFirst`); `CreateServiceInput`/`UpdateServiceInput` confirmed; `EscalationPolicy` has no `stepCount` (use `repeat`/`isFavorite`); `get_escalation_policy` uses `actions { type args }` (skips the `displayInfo` union); `Target` is `{ id type name }`; EP-target destination types are `builtin-user`/`builtin-schedule`/`builtin-rotation` with arg keys `user_id`/`schedule_id`/`rotation_id`. STILL TO VERIFY during their phases: Phase 4 `*SearchOptions`/`contactMethods.dest { type args }` on `get_user`, schedule/rotation/override/heartbeat/integration-key input shapes. A committed `schema.graphql` snapshot can be produced via `npm run introspect` (Task 30).
