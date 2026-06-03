@@ -45,7 +45,7 @@ Password mode (recommended — auto-refreshes the session):
   "mcpServers": {
     "goalert": {
       "command": "node",
-      "args": ["/path/to/goalert-mcp/dist/index.js"],
+      "args": ["/absolute/path/to/goalert-mcp/dist/index.js"],
       "env": {
         "GOALERT_BASE_URL": "http://localhost:8081",
         "GOALERT_USERNAME": "admin",

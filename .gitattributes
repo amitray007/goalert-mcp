@@ -1,0 +1,5 @@
+# Normalize line endings to LF across platforms
+* text=eol=lf
+
+# Keep generated files out of GitHub language stats / collapse in diffs
+package-lock.json linguist-generated=true

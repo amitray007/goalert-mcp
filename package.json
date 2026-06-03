@@ -1,25 +1,52 @@
 {
   "name": "goalert-mcp",
   "version": "0.1.0",
-  "description": "MCP server for GoAlert (read + write) over its GraphQL API",
+  "description": "MCP server for GoAlert — read + write control over on-call scheduling and alerting via its GraphQL API",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "goalert",
+    "on-call",
+    "oncall",
+    "alerting",
+    "incident-response",
+    "graphql",
+    "claude"
+  ],
+  "homepage": "https://github.com/amitray007/goalert-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/amitray007/goalert-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amitray007/goalert-mcp.git"
+  },
+  "license": "MIT",
+  "author": "Amit Ray (https://github.com/amitray007)",
   "type": "module",
   "bin": {
     "goalert-mcp": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "introspect": "tsx scripts/introspect.ts"
+    "introspect": "tsx scripts/introspect.ts",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
