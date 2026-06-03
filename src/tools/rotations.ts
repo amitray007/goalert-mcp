@@ -89,7 +89,9 @@ const updateRotation: ToolDef = {
       .int()
       .min(0)
       .optional()
-      .describe("Index into userIDs to make currently-active (advance/override)."),
+      .describe(
+        "0-based index into userIDs to make the currently-active on-call user — this is how you override/advance who's on call (there is no separate rotation-override API)."
+      ),
   },
   mutating: true,
   handler: async (client, args) => {

@@ -5,6 +5,9 @@ import { GoAlertError } from "../client/errors.js";
 import { CREATE_INT_KEY, LIST_INT_KEYS } from "../graphql/operations.js";
 
 // ---- Task 28: manage_integration_keys ----
+// The whole tool is gated as mutating because of the create action. The read-only
+// `list` action is also reachable via get_service (which returns integrationKeys),
+// so listing keys remains available even when the server runs in read-only mode.
 
 const manageIntegrationKeys: ToolDef = {
   name: "manage_integration_keys",

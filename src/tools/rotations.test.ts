@@ -164,6 +164,12 @@ describe("update_rotation", () => {
     expect(execute.mock.calls[0]![1].input).toEqual({ id: "r1", activeUserIndex: 2 });
   });
 
+  test("preserves activeUserIndex: 0 (not dropped by a falsy check)", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ updateRotation: true }));
+    await tool("update_rotation").handler({ execute, paginate: vi.fn() } as any, { id: "r1", activeUserIndex: 0 });
+    expect(execute.mock.calls[0]![1].input).toEqual({ id: "r1", activeUserIndex: 0 });
+  });
+
   test("can set userIDs to replace participant list", async () => {
     const execute = vi.fn(async (..._args: any[]) => ({ updateRotation: true }));
     await tool("update_rotation").handler({ execute, paginate: vi.fn() } as any, {
