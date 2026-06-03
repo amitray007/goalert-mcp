@@ -60,3 +60,45 @@ describe("get_service", () => {
     expect(tool("get_service").mutating).toBe(false);
   });
 });
+
+describe("create_service", () => {
+  test("sends name and escalationPolicyID", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ createService: { id: "s9" } }));
+    await tool("create_service").handler({ execute, paginate: vi.fn() } as any, { name: "Payments", escalationPolicyID: "ep1" });
+    expect(execute.mock.calls[0]![1]).toMatchObject({ input: { name: "Payments", escalationPolicyID: "ep1" } });
+  });
+
+  test("omits optional fields when not provided", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ createService: { id: "s9" } }));
+    await tool("create_service").handler({ execute, paginate: vi.fn() } as any, { name: "Minimal" });
+    expect(execute.mock.calls[0]![1]).toEqual({ input: { name: "Minimal" } });
+  });
+
+  test("returns createService from response", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ createService: { id: "s9", name: "Payments" } }));
+    const r = await tool("create_service").handler({ execute, paginate: vi.fn() } as any, { name: "Payments" });
+    expect(r.structuredContent).toMatchObject({ id: "s9", name: "Payments" });
+  });
+
+  test("is marked mutating", () => {
+    expect(tool("create_service").mutating).toBe(true);
+  });
+});
+
+describe("update_service", () => {
+  test("sends id and maintenanceExpiresAt", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ updateService: true }));
+    await tool("update_service").handler({ execute, paginate: vi.fn() } as any, { id: "s1", maintenanceExpiresAt: "2026-06-04T00:00:00Z" });
+    expect(execute.mock.calls[0]![1]).toMatchObject({ input: { id: "s1", maintenanceExpiresAt: "2026-06-04T00:00:00Z" } });
+  });
+
+  test("omits optional fields when not provided", async () => {
+    const execute = vi.fn(async (..._args: any[]) => ({ updateService: true }));
+    await tool("update_service").handler({ execute, paginate: vi.fn() } as any, { id: "s1" });
+    expect(execute.mock.calls[0]![1]).toEqual({ input: { id: "s1" } });
+  });
+
+  test("is marked mutating", () => {
+    expect(tool("update_service").mutating).toBe(true);
+  });
+});
