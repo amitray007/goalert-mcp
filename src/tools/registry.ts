@@ -18,7 +18,9 @@ export function registerTools(server: McpServer, client: GoAlertClient, config: 
         try {
           return await def.handler(client, args);
         } catch (err) {
-          const e = err as GoAlertError;
+          // Normalize first: a thrown non-Error (string, undefined, etc.) must
+          // not make the catch itself throw a TypeError that escapes.
+          const e = (err instanceof Error ? err : new Error(String(err))) as GoAlertError;
           const detail = [e.message, e.code && `code=${e.code}`, e.path && `path=${e.path.join(".")}`]
             .filter(Boolean).join(" | ");
           return { isError: true, content: [{ type: "text", text: `GoAlert error: ${detail}` }] };

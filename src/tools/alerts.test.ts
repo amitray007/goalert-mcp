@@ -14,6 +14,20 @@ describe("list_alerts", () => {
     expect(vars.input.first).toBe(10);
     expect(r.structuredContent).toMatchObject({ count: 1 });
   });
+
+  test("all:true auto-paginates with max=200", async () => {
+    const paginate = vi.fn(async (..._args: any[]) => ({ items: [], nextCursor: null, hasMore: false }));
+    const client = { execute: vi.fn(), paginate } as any;
+    await tool("list_alerts").handler(client, { all: true, first: 10 });
+    expect(paginate.mock.calls[0]![3]).toBe(200);
+  });
+
+  test("without all, max is the page size", async () => {
+    const paginate = vi.fn(async (..._args: any[]) => ({ items: [], nextCursor: null, hasMore: false }));
+    const client = { execute: vi.fn(), paginate } as any;
+    await tool("list_alerts").handler(client, { first: 10 });
+    expect(paginate.mock.calls[0]![3]).toBe(10);
+  });
 });
 
 describe("get_alert", () => {

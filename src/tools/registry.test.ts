@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { registerTools } from "./registry.js";
 import type { ToolDef } from "./types.js";
+import { GoAlertError } from "../client/errors.js";
 import { z } from "zod";
 
 function fakeServer() {
@@ -29,5 +30,46 @@ describe("registerTools", () => {
     const s = fakeServer();
     registerTools(s as any, {} as any, { readOnly: true } as any, defs);
     expect(s.registered.map((r) => r.name)).toEqual(["read_thing"]);
+  });
+
+  test("wraps a thrown GoAlertError into an isError result with code and path", async () => {
+    const s = fakeServer();
+    const failing: ToolDef[] = [
+      {
+        name: "boom_thing",
+        description: "b",
+        inputSchema: {},
+        mutating: false,
+        handler: async () => {
+          throw new GoAlertError("boom", "INVALID_INPUT_VALUE", ["createService", "name"]);
+        },
+      },
+    ];
+    registerTools(s as any, {} as any, { readOnly: false } as any, failing);
+    const result = await s.registered[0].handler({});
+    expect(result.isError).toBe(true);
+    const text = result.content[0].text as string;
+    expect(text).toContain("boom");
+    expect(text).toContain("code=INVALID_INPUT_VALUE");
+    expect(text).toContain("path=createService.name");
+  });
+
+  test("normalizes a non-Error rejection without throwing from the catch", async () => {
+    const s = fakeServer();
+    const failing: ToolDef[] = [
+      {
+        name: "weird_throw",
+        description: "w",
+        inputSchema: {},
+        mutating: false,
+        handler: async () => {
+          throw "just a string"; // eslint-disable-line no-throw-literal
+        },
+      },
+    ];
+    registerTools(s as any, {} as any, { readOnly: false } as any, failing);
+    const result = await s.registered[0].handler({});
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text as string).toContain("just a string");
   });
 });

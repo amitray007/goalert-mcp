@@ -24,6 +24,55 @@ describe("goalert_graphql_query", () => {
       .rejects.toThrow(/read-only/i);
   });
 
+  test("rejects the multi-op-in-string bypass (mutation hidden after a string-literal comment)", async () => {
+    const execute = vi.fn();
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: 'query{ a(b:"x # y") } mutation Z{ evil }' }))
+      .rejects.toThrow();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  test("rejects multi-operation documents", async () => {
+    const execute = vi.fn();
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: "query A { x } query B { y }" }))
+      .rejects.toThrow(/single/i);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  test("rejects invalid GraphQL", async () => {
+    const execute = vi.fn();
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: "query { this is not valid" }))
+      .rejects.toThrow(/invalid graphql/i);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  test("rejects a fragment-only document (no operation)", async () => {
+    const execute = vi.fn();
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: "fragment F on Service { id }" }))
+      .rejects.toThrow(/operation/i);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  test("allows a leading-comment query", async () => {
+    const execute = vi.fn(async () => ({ x: 1 }));
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: "# hi\nquery { x }" }))
+      .resolves.toBeDefined();
+    expect(execute).toHaveBeenCalled();
+  });
+
+  test("allows the shorthand query (anonymous operation)", async () => {
+    const execute = vi.fn(async () => ({ x: 1 }));
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: "{ x }" }))
+      .resolves.toBeDefined();
+    expect(execute).toHaveBeenCalled();
+  });
+
+  test("allows a query with a field literally named mutation", async () => {
+    const execute = vi.fn(async () => ({ mutation: { id: "1" } }));
+    await expect(tool("goalert_graphql_query").handler(client(execute), { query: "query { mutation { id } }" }))
+      .resolves.toBeDefined();
+    expect(execute).toHaveBeenCalled();
+  });
+
   test("is marked non-mutating", () => {
     expect(tool("goalert_graphql_query").mutating).toBe(false);
   });
