@@ -149,3 +149,53 @@ mutation SetTemp($input: SetTemporaryScheduleInput!) { setTemporarySchedule(inpu
 
 export const CLEAR_TEMP_SCHED = /* GraphQL */ `
 mutation ClearTemp($input: ClearTemporarySchedulesInput!) { clearTemporarySchedules(input: $input) }`;
+
+// Task 25: Rotations read
+export const LIST_ROTATIONS = /* GraphQL */ `
+query ListRotations($input: RotationSearchOptions) {
+  rotations(input: $input) { nodes { id name description type shiftLength timeZone } pageInfo { endCursor hasNextPage } }
+}`;
+
+export const GET_ROTATION = /* GraphQL */ `
+query GetRotation($id: ID!) {
+  rotation(id: $id) {
+    id name description type shiftLength start timeZone
+    activeUserIndex userIDs users { id name } nextHandoffTimes(num: 3)
+  }
+}`;
+
+// Task 26: Rotations write
+export const CREATE_ROTATION = /* GraphQL */ `
+mutation CreateRotation($input: CreateRotationInput!) { createRotation(input: $input) { id name } }`;
+
+export const UPDATE_ROTATION = /* GraphQL */ `
+mutation UpdateRotation($input: UpdateRotationInput!) { updateRotation(input: $input) }`;
+
+// Task 27: Users read
+export const LIST_USERS = /* GraphQL */ `
+query ListUsers($input: UserSearchOptions) {
+  users(input: $input) { nodes { id name email role } pageInfo { endCursor hasNextPage } }
+}`;
+
+export const GET_USER = /* GraphQL */ `
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id name email role
+    contactMethods { id name dest { type args } disabled pending }
+    onCallOverview { serviceCount serviceAssignments { serviceID serviceName stepNumber } }
+  }
+}`;
+
+// Task 28: Integration keys
+export const CREATE_INT_KEY = /* GraphQL */ `
+mutation CreateIntKey($input: CreateIntegrationKeyInput!) { createIntegrationKey(input: $input) { id name type href } }`;
+
+export const LIST_INT_KEYS = /* GraphQL */ `
+query IntKeys($serviceID: ID!) { service(id: $serviceID) { integrationKeys { id name type href } } }`;
+
+// Task 29: Heartbeat monitors
+export const CREATE_HEARTBEAT = /* GraphQL */ `
+mutation CreateHB($input: CreateHeartbeatMonitorInput!) { createHeartbeatMonitor(input: $input) { id name timeoutMinutes href } }`;
+
+export const UPDATE_HEARTBEAT = /* GraphQL */ `
+mutation UpdateHB($input: UpdateHeartbeatMonitorInput!) { updateHeartbeatMonitor(input: $input) }`;
