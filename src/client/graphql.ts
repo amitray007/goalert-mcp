@@ -117,12 +117,17 @@ export function createClient(config: GoAlertConfig, auth: Authenticator, fetchFn
     extract: (data: unknown) => Connection<TNode>,
     max = 200,
   ): Promise<Page<TNode>> {
+    // GoAlert list queries take their cursor as `after` INSIDE the search-options
+    // `input` object (e.g. ServiceSearchOptions.after), not as a top-level
+    // variable — so we advance the cursor there, preserving the other input
+    // fields (search, filters, first, …) on every page.
+    const baseInput = (variables.input as Record<string, unknown> | undefined) ?? {};
     const items: TNode[] = [];
-    let after: string | null = (variables.after as string | undefined) ?? null;
+    let after: string | null = (baseInput.after as string | undefined) ?? null;
     let lastCursor: string | null = after;
     let hasNextPage = true;
     while (hasNextPage && items.length < max) {
-      const data = await execute<unknown>(query, { ...variables, after });
+      const data = await execute<unknown>(query, { ...variables, input: { ...baseInput, after } });
       const conn = extract(data);
       items.push(...conn.nodes);
       lastCursor = conn.pageInfo.endCursor || lastCursor;

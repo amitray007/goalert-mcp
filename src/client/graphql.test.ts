@@ -131,6 +131,23 @@ describe("graphql executor", () => {
     expect(page.nextCursor).toBe("c2");
   });
 
+  test("paginate advances the cursor inside input.after, preserving other input fields", async () => {
+    const pages = [
+      { data: { services: { nodes: [{ id: "1" }], pageInfo: { endCursor: "c1", hasNextPage: true } } } },
+      { data: { services: { nodes: [{ id: "2" }], pageInfo: { endCursor: "c2", hasNextPage: false } } } },
+    ];
+    let i = 0;
+    const f = vi.fn(async (..._args: any[]) => jsonRes(pages[i++]));
+    const client = createClient(cfg, fakeAuth(), f as any);
+    await client.paginate<{ id: string }>("q", { input: { first: 25, search: "x" } }, (d: any) => d.services);
+    // Page 1 carries the original input (after null/undefined); page 2 must carry
+    // the page-1 endCursor INSIDE input, with first/search preserved.
+    const body1 = JSON.parse((f.mock.calls[0]![1] as any).body);
+    const body2 = JSON.parse((f.mock.calls[1]![1] as any).body);
+    expect(body1.variables.input).toMatchObject({ first: 25, search: "x" });
+    expect(body2.variables.input).toEqual({ first: 25, search: "x", after: "c1" });
+  });
+
   test("paginate stops at max and reports hasMore", async () => {
     const f = vi.fn(async () => jsonRes({ data: { services: { nodes: [{ id: "x" }], pageInfo: { endCursor: "c", hasNextPage: true } } } }));
     const client = createClient(cfg, fakeAuth(), f as any);
