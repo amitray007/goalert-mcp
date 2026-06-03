@@ -12,11 +12,13 @@ query ListAlerts($input: AlertSearchOptions) {
 export const GET_ALERT = /* GraphQL */ `
 query GetAlert($id: Int!) {
   alert(id: $id) {
-    id alertID status summary details dedup createdAt
-    service { id name }
+    id alertID status summary details createdAt
+    serviceID service { id name }
+    noiseReason
+    meta { key value }
     state { lastEscalation stepNumber repeatCount }
     recentEvents(input: { limit: 20 }) {
-      nodes { timestamp message state { details status } }
+      nodes { id timestamp message state { details status } }
     }
   }
 }`;

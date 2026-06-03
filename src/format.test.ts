@@ -18,6 +18,15 @@ describe("format", () => {
     expect(r.isError).toBeUndefined();
   });
 
+  test("ok wraps array data as { result } so structuredContent stays a record", () => {
+    const r = ok("Alerts updated", [{ alertID: 1 }, { alertID: 2 }]);
+    // MCP requires structuredContent to be an object, not an array.
+    expect(Array.isArray(r.structuredContent)).toBe(false);
+    expect(r.structuredContent).toEqual({ result: [{ alertID: 1 }, { alertID: 2 }] });
+    // The raw array is still shown in the text block.
+    expect(firstText(r).text).toContain('"alertID": 2');
+  });
+
   test("listResult summarizes counts and pagination", () => {
     const r = listResult("Services", { items: [{ id: "1" }], nextCursor: "c", hasMore: true });
     expect(firstText(r).text).toContain("1 item");

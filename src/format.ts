@@ -2,9 +2,16 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Page } from "./client/graphql.js";
 
 export function ok(summary: string, data: unknown): CallToolResult {
+  // MCP requires `structuredContent` to be a JSON object (a "record"). Arrays
+  // and primitives are wrapped as { result: data } so tools that return a list
+  // (e.g. updateAlerts -> [Alert!]) or a scalar still produce a valid result.
+  const structuredContent =
+    data !== null && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : { result: data };
   return {
     content: [{ type: "text", text: `${summary}\n\n${JSON.stringify(data, null, 2)}` }],
-    structuredContent: data as Record<string, unknown>,
+    structuredContent,
   };
 }
 

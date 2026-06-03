@@ -92,11 +92,12 @@ const setFavorite: ToolDef = {
 
 const setLabel: ToolDef = {
   name: "goalert_set_label",
-  description: "Set or remove a key/value label on a target (usually a service). An empty value deletes the label.",
+  description:
+    "Set or remove a key/value label on a target (usually a service). The key MUST be namespaced as `prefix/suffix` (e.g. `team/owner` or `example.com/region`) — a key without a `/` is rejected by GoAlert. An empty value deletes the label.",
   inputSchema: {
     type: z.enum(["service"]).describe("Currently only service labels are supported."),
     id: z.string(),
-    key: z.string(),
+    key: z.string().describe('Namespaced label key in `prefix/suffix` form, e.g. "team/owner".'),
     value: z.string().describe("Label value; empty string deletes the label."),
   },
   mutating: true,
