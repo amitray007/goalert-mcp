@@ -13,6 +13,7 @@ import { escalationTools } from "./tools/escalation.js";
 import { scheduleTools } from "./tools/schedules.js";
 import { rotationTools } from "./tools/rotations.js";
 import { userTools } from "./tools/users.js";
+import { keyTools } from "./tools/keys.js";
 
 export function allToolDefs(): ToolDef[] {
   return [
@@ -24,6 +25,7 @@ export function allToolDefs(): ToolDef[] {
     ...scheduleTools,
     ...rotationTools,
     ...userTools,
+    ...keyTools,
   ];
 }
 
