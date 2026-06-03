@@ -20,3 +20,24 @@ query GetAlert($id: Int!) {
     }
   }
 }`;
+
+export const ONCALL_BY_SERVICE = /* GraphQL */ `
+query OnCallByService($id: ID!) {
+  service(id: $id) { id name onCallUsers { userID userName stepNumber } }
+}`;
+
+export const ONCALL_BY_SCHEDULE = /* GraphQL */ `
+query OnCallBySchedule($id: ID!, $start: ISOTimestamp!, $end: ISOTimestamp!) {
+  schedule(id: $id) {
+    id name timeZone
+    shifts(start: $start, end: $end) { userID user { id name } start end truncated }
+  }
+}`;
+
+export const ONCALL_BY_USER = /* GraphQL */ `
+query OnCallByUser($id: ID!) {
+  user(id: $id) {
+    id name
+    onCallOverview { serviceCount serviceAssignments { serviceID serviceName escalationPolicyName stepNumber } }
+  }
+}`;
