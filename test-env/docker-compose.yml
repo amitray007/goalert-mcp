@@ -1,0 +1,42 @@
+name: goalert-test
+
+# Local GoAlert sandbox for end-to-end testing of the MCP server.
+# Only port 8081 is published (host Postgres on 5432/5433 stays untouched —
+# GoAlert reaches its DB over the internal compose network).
+#
+# Notifications are stubbed (--stub-notifiers via GOALERT_STUB_NOTIFIERS), so
+# escalation logic runs but nothing is actually sent (no Twilio/SMTP needed).
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: goalert
+      POSTGRES_PASSWORD: goalert
+      POSTGRES_DB: goalert
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U goalert -d goalert"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - goalert-pgdata:/var/lib/postgresql/data
+
+  goalert:
+    image: goalert/goalert:v0.34.1
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Only GOALERT_DB_URL is strictly required to boot. The image already sets
+      # GOALERT_LISTEN=:8081, so we don't override it here.
+      GOALERT_DB_URL: "postgres://goalert:goalert@db:5432/goalert?sslmode=disable"
+      GOALERT_PUBLIC_URL: "http://localhost:8081"
+      GOALERT_STUB_NOTIFIERS: "true"
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    # The server auto-applies DB migrations on startup; no separate migrate step.
+
+volumes:
+  goalert-pgdata:
