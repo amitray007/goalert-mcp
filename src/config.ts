@@ -20,7 +20,9 @@ export function loadConfig(env: NodeJS.ProcessEnv | Record<string, string | unde
   } catch {
     throw new ConfigError(`GOALERT_BASE_URL is not a valid URL: ${rawBase}`);
   }
-  const baseUrl = `${url.protocol}//${url.host}`;
+  // Keep any sub-path (e.g. reverse-proxy deploys at https://example.com/goalert/)
+  // but strip a trailing slash so we can append "/api/graphql" cleanly.
+  const baseUrl = `${url.protocol}//${url.host}${url.pathname}`.replace(/\/+$/, "");
 
   const username = env.GOALERT_USERNAME?.trim();
   const password = env.GOALERT_PASSWORD;

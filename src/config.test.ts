@@ -17,6 +17,12 @@ describe("loadConfig", () => {
     expect(c.auth).toEqual({ mode: "token", token: "abc" });
   });
 
+  test("preserves a sub-path base url (reverse-proxy deploys)", () => {
+    const c = loadConfig({ GOALERT_BASE_URL: "https://example.com/goalert/", GOALERT_TOKEN: "abc" });
+    expect(c.baseUrl).toBe("https://example.com/goalert"); // trailing slash stripped, path kept
+    expect(c.referer).toBe("https://example.com/goalert");
+  });
+
   test("READ_ONLY and REFERER overrides", () => {
     const c = loadConfig({ ...base, GOALERT_TOKEN: "abc", GOALERT_READ_ONLY: "true", GOALERT_REFERER: "https://x" });
     expect(c.readOnly).toBe(true);

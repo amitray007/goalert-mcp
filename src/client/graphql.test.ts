@@ -17,6 +17,19 @@ function jsonRes(body: unknown, status = 200): Response {
   return { ok: status < 400, status, json: async () => body, text: async () => JSON.stringify(body) } as any;
 }
 
+// A response whose raw body is `text` (not JSON). `json()` throws like a real
+// Response would when the body isn't valid JSON.
+function textRes(text: string, status = 200): Response {
+  return {
+    ok: status < 400,
+    status,
+    text: async () => text,
+    json: async () => {
+      throw new SyntaxError(`Unexpected token in JSON: ${text.slice(0, 10)}`);
+    },
+  } as any;
+}
+
 describe("graphql executor", () => {
   test("posts to /api/graphql with bearer token and returns data", async () => {
     const f = vi.fn(async () => jsonRes({ data: { service: { id: "1" } } }));
@@ -52,6 +65,42 @@ describe("graphql executor", () => {
     expect(f).toHaveBeenCalledTimes(2);
   });
 
+  test("non-OK non-401 (500 with HTML body) throws GoAlertError, not SyntaxError", async () => {
+    const f = vi.fn(async () => textRes("<html><body>502 Bad Gateway</body></html>", 500));
+    const client = createClient(cfg, fakeAuth(), f as any);
+    await expect(client.execute("query{x}")).rejects.toBeInstanceOf(GoAlertError);
+    await expect(client.execute("query{x}")).rejects.toMatchObject({ status: 500 });
+  });
+
+  test("200 with non-JSON body throws GoAlertError, not SyntaxError", async () => {
+    const f = vi.fn(async () => textRes("not json at all", 200));
+    const client = createClient(cfg, fakeAuth(), f as any);
+    const err = await client.execute("query{x}").catch((e) => e);
+    expect(err).toBeInstanceOf(GoAlertError);
+    expect(err).not.toBeInstanceOf(SyntaxError);
+  });
+
+  test("body-level Unauthorized error triggers one re-auth + retry, then throws", async () => {
+    const auth = fakeAuth();
+    const f = vi.fn(async () => jsonRes({ errors: [{ message: "Unauthorized" }] }));
+    const client = createClient(cfg, auth, f as any);
+    await expect(client.execute("query{ok}")).rejects.toBeInstanceOf(GoAlertError);
+    expect(auth.invalidate).toHaveBeenCalledTimes(1);
+    expect(f).toHaveBeenCalledTimes(2);
+  });
+
+  test("body-level Unauthorized then success on retry resolves", async () => {
+    const auth = fakeAuth();
+    let call = 0;
+    const f = vi.fn(async () =>
+      ++call === 1 ? jsonRes({ errors: [{ message: "Unauthorized" }] }) : jsonRes({ data: { ok: true } }),
+    );
+    const client = createClient(cfg, auth, f as any);
+    await expect(client.execute("query{ok}")).resolves.toEqual({ ok: true });
+    expect(auth.invalidate).toHaveBeenCalledTimes(1);
+    expect(f).toHaveBeenCalledTimes(2);
+  });
+
   test("serializes: never two requests in flight at once", async () => {
     let inFlight = 0, maxInFlight = 0;
     const f = vi.fn(async () => {
@@ -75,7 +124,7 @@ describe("graphql executor", () => {
     const client = createClient(cfg, fakeAuth(), f as any);
     const page = await client.paginate<{ id: string }>(
       "query($after:String){services(input:{after:$after}){nodes{id} pageInfo{endCursor hasNextPage}}}",
-      {}, (d) => d.services,
+      {}, (d: any) => d.services,
     );
     expect(page.items.map((s) => s.id)).toEqual(["1", "2"]);
     expect(page.hasMore).toBe(false);
@@ -85,7 +134,7 @@ describe("graphql executor", () => {
   test("paginate stops at max and reports hasMore", async () => {
     const f = vi.fn(async () => jsonRes({ data: { services: { nodes: [{ id: "x" }], pageInfo: { endCursor: "c", hasNextPage: true } } } }));
     const client = createClient(cfg, fakeAuth(), f as any);
-    const page = await client.paginate<{ id: string }>("q", {}, (d) => d.services, 2);
+    const page = await client.paginate<{ id: string }>("q", {}, (d: any) => d.services, 2);
     expect(page.items).toHaveLength(2);
     expect(page.hasMore).toBe(true);
   });
