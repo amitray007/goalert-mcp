@@ -14,6 +14,7 @@ import { scheduleTools } from "./tools/schedules.js";
 import { rotationTools } from "./tools/rotations.js";
 import { userTools } from "./tools/users.js";
 import { keyTools } from "./tools/keys.js";
+import { heartbeatTools } from "./tools/heartbeats.js";
 
 export function allToolDefs(): ToolDef[] {
   return [
@@ -26,6 +27,7 @@ export function allToolDefs(): ToolDef[] {
     ...rotationTools,
     ...userTools,
     ...keyTools,
+    ...heartbeatTools,
   ];
 }
 
