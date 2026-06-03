@@ -1,5 +1,9 @@
 # goalert-mcp
 
+[![CI](https://github.com/amitray007/goalert-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/amitray007/goalert-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](.nvmrc)
+
 An MCP (Model Context Protocol) server that gives an LLM read and write control over a [GoAlert](https://github.com/target/goalert) on-call management instance. It communicates with GoAlert over its GraphQL API, supports authentication via username/password (with automatic session refresh) or a pre-obtained session token, exposes 33 curated operator tools across alerts, services, schedules, rotations, escalation policies, and more, and includes a built-in read-only mode that hides all mutating tools.
 
 ---
@@ -176,7 +180,7 @@ Tools marked **(read-only)** never modify GoAlert state. Tools marked **(mutatin
 
 | Tool | Type | Purpose |
 |---|---|---|
-| `manage_integration_keys` | mutating | Create or list integration keys for a service. Supported types: `generic`, `grafana`, `site24x7`, `prometheusAlertmanager`, `email`, `universal`. Returns the ingest `href`. |
+| `manage_integration_keys` | mutating | Create or list integration keys for a service. Supported types: `generic`, `grafana`, `site24x7`, `prometheusAlertmanager`, `email`, `universal`. Returns the ingest `href`. Delete via `goalert_delete` with type `integrationKey`. |
 
 ### Heartbeat monitors
 
@@ -247,6 +251,16 @@ The response body is the session token. Set it as `GOALERT_TOKEN`. Tokens expire
 npm install
 npm run build        # compile TypeScript → dist/
 npm run typecheck    # type-check without emitting
-npm run test         # run all unit tests (174 tests)
+npm run test         # run the unit test suite
 npm run introspect   # dump GoAlert's GraphQL schema to schema.graphql (requires live instance)
 ```
+
+---
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, the local sandbox, and the tool-authoring guide, and please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See [SECURITY.md](SECURITY.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+[MIT](LICENSE) © Amit Ray
