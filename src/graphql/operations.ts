@@ -98,3 +98,54 @@ query OnCallByUser($id: ID!) {
     onCallOverview { serviceCount serviceAssignments { serviceID serviceName escalationPolicyName stepNumber } }
   }
 }`;
+
+// Task 21: Schedules read
+export const LIST_SCHEDULES = /* GraphQL */ `
+query ListSchedules($input: ScheduleSearchOptions) {
+  schedules(input: $input) {
+    nodes { id name description timeZone isFavorite }
+    pageInfo { endCursor hasNextPage }
+  }
+}`;
+
+export const GET_SCHEDULE = /* GraphQL */ `
+query GetSchedule($id: ID!, $start: ISOTimestamp!, $end: ISOTimestamp!) {
+  schedule(id: $id) {
+    id name description timeZone isFavorite
+    targets { target { id name type } rules { id start end weekdayFilter } }
+    shifts(start: $start, end: $end) { userID user { id name } start end truncated }
+    temporarySchedules { start end shifts { userID start end } }
+  }
+}`;
+
+// Task 22: Schedules write
+export const CREATE_SCHEDULE = /* GraphQL */ `
+mutation CreateSchedule($input: CreateScheduleInput!) { createSchedule(input: $input) { id name } }`;
+
+export const UPDATE_SCHEDULE = /* GraphQL */ `
+mutation UpdateSchedule($input: UpdateScheduleInput!) { updateSchedule(input: $input) }`;
+
+export const UPDATE_SCHEDULE_TARGET = /* GraphQL */ `
+mutation UpdateScheduleTarget($input: ScheduleTargetInput!) { updateScheduleTarget(input: $input) }`;
+
+// Task 23: Overrides
+export const CREATE_OVERRIDE = /* GraphQL */ `
+mutation CreateOverride($input: CreateUserOverrideInput!) { createUserOverride(input: $input) { id } }`;
+
+export const UPDATE_OVERRIDE = /* GraphQL */ `
+mutation UpdateOverride($input: UpdateUserOverrideInput!) { updateUserOverride(input: $input) }`;
+
+export const LIST_OVERRIDES = /* GraphQL */ `
+query ListOverrides($input: UserOverrideSearchOptions) {
+  userOverrides(input: $input) {
+    nodes { id start end addUserID removeUserID }
+    pageInfo { endCursor hasNextPage }
+  }
+}`;
+
+// Task 24: Temporary schedules
+export const SET_TEMP_SCHED = /* GraphQL */ `
+mutation SetTemp($input: SetTemporaryScheduleInput!) { setTemporarySchedule(input: $input) }`;
+
+export const CLEAR_TEMP_SCHED = /* GraphQL */ `
+mutation ClearTemp($input: ClearTemporarySchedulesInput!) { clearTemporarySchedules(input: $input) }`;
